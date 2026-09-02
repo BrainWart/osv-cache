@@ -2,8 +2,15 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using API;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<VulnerabilityContext>(b =>
+{
+    builder.Configuration.GetConnectionString("Default");
+    b.UseSqlite("Data Source = ./db.sqlite");
+});
 
 builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 {
@@ -25,6 +32,12 @@ builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 });
 
 var app = builder.Build();
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    VulnerabilityContext con = scope.ServiceProvider.GetRequiredService<VulnerabilityContext>();
+    con.Database.EnsureCreated();
+}
 
 app.MapGet("/", () => "Hello World!");
 
