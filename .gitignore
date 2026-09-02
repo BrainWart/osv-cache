@@ -35,3 +35,9 @@ result-*
 .idea/
 *.swp
 *~
+
+# Local runtime artifacts
+*.pfx
+*.sqlite
+*.sqlite3
+/output/
