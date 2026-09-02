@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using API;
@@ -19,15 +18,9 @@ builder.WebHost.ConfigureKestrel((context, serverOptions) =>
         SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
     };
 
-    serverOptions.Listen(IPAddress.Any, 8080, listenOptions =>
+    serverOptions.ConfigureEndpointDefaults(options =>
     {
-        listenOptions.Use(next =>
-        {
-            var loggerFactory = listenOptions.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger<ConnectTunnelMiddleware>();
-            var middleware = new ConnectTunnelMiddleware(next, httpsOptions, logger);
-            return middleware.OnConnectionAsync;
-        });
+        options.UseConnect();
     });
 });
 
