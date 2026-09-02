@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using API;
 
 using Microsoft.EntityFrameworkCore;
@@ -29,42 +27,8 @@ using (IServiceScope scope = app.Services.CreateScope())
     VulnerabilityContext con = scope.ServiceProvider.GetRequiredService<VulnerabilityContext>();
     con.Database.EnsureCreated();
 
-    if (!con.Vulnerabilities.Any())
-    {
-        string exampleDataDir = Path.Combine("..", "..", "example-data", "osv");
-        if (Directory.Exists(exampleDataDir))
-        {
-            var jsonOptions = new JsonSerializerOptions
-            {
-                AllowOutOfOrderMetadataProperties = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
-
-            foreach (string path in Directory.EnumerateFiles(exampleDataDir, "*.json", SearchOption.AllDirectories))
-            {
-                try
-                {
-                    Vulnerability? vuln = JsonSerializer.Deserialize<Vulnerability>(System.IO.File.ReadAllText(path), jsonOptions);
-                    if (vuln is not null)
-                    {
-                        con.Vulnerabilities.Add(vuln);
-                        con.SaveChanges();
-                    }
-                }
-                catch (Exception ex) when (ex is JsonException or DbUpdateException)
-                {
-                    // Some fixtures don't fit this model yet (e.g. Ubuntu USN files whose
-                    // "related" field is a string array, not embedded Vulnerability objects,
-                    // or packages shared by purl across advisories). Skip and keep going.
-                    app.Logger.LogWarning(ex, "Skipping OSV fixture {Path}: {Message}", path, ex.Message);
-                }
-                finally
-                {
-                    con.ChangeTracker.Clear();
-                }
-            }
-        }
-    }
+    string exampleDataDir = Path.Combine("..", "..", "example-data", "osv");
+    OsvSeeder.SeedFromDirectory(con, exampleDataDir, app.Logger);
 }
 
 app.MapGet("/v1/vulns", (VulnerabilityContext context)
