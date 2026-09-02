@@ -20,6 +20,8 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             dotnet-sdk_10
+            omnisharp-roslyn
+            netcoredbg
           ];
 
           shellHook = ''
