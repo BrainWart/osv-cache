@@ -27,8 +27,8 @@ using (IServiceScope scope = app.Services.CreateScope())
     VulnerabilityContext con = scope.ServiceProvider.GetRequiredService<VulnerabilityContext>();
     con.Database.EnsureCreated();
 
-    // con.Vulnerabilities.Add(System.Text.Json.JsonSerializer.Deserialize<Vulnerability>(System.IO.File.ReadAllText("../../example-data/GHSA-hm8q-7f3q-5f36.json"), new System.Text.Json.JsonSerializerOptions() { AllowOutOfOrderMetadataProperties = true, PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })!);
-    // con.SaveChanges();
+    string exampleDataDir = Path.Combine("..", "..", "example-data", "osv");
+    OsvSeeder.SeedFromDirectory(con, exampleDataDir, app.Logger);
 }
 
 app.MapGet("/v1/vulns", (VulnerabilityContext context)
@@ -36,7 +36,14 @@ app.MapGet("/v1/vulns", (VulnerabilityContext context)
 app.MapGet("/v1/vulns/{id}", (VulnerabilityContext context, string id)
         => context.Vulnerabilities.Include(x => x.Affected).FirstOrDefault(x => x.Id == id))
     .RequireHost("api.osv.dev");
-app.MapPost("/v1/query", () => StatusCode(501))
+app.MapPost("/v1/query", async Task<IResult> (VulnerabilityContext context, OsvQueryRequest request) =>
+    {
+        if (!OsvQueryEngine.TryResolvePackage(request, out string? name, out string? ecosystem, out string? version))
+            return BadRequest();
+
+        List<Vulnerability> vulns = await OsvQueryEngine.QueryAsync(context, name!, ecosystem, version);
+        return Ok(new { vulns });
+    })
     .RequireHost("api.osv.dev");
 app.MapPost("/v1/querybatch", () => StatusCode(501))
     .RequireHost("api.osv.dev");
