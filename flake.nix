@@ -16,6 +16,7 @@
       in
       {
         packages.default = pkgs.callPackage ./nix/package.nix { };
+        packages.sbom-researcher = pkgs.callPackage ./nix/sbom-researcher.package.nix { };
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
