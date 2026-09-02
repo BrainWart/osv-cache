@@ -1,5 +1,10 @@
 [
   {
+    "pname": "Cronos",
+    "version": "0.8.4",
+    "hash": "sha256-L9rLcqnQybPoJCcg60h49bjXfqEarM9SFHqOJUMvxz8="
+  },
+  {
     "pname": "Microsoft.Data.Sqlite",
     "version": "9.0.0",
     "hash": "sha256-SGUV8GJAY8shZwHs4SpfrjsVh5foE0E9qGjO3FiSqFQ="
