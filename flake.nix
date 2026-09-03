@@ -34,6 +34,10 @@
         checks.connect-tunnel = import ./nix/tests/connect-tunnel.nix {
           inherit pkgs self;
         };
+
+        checks.sbom-researcher = import ./nix/tests/sbom-researcher.nix {
+          inherit pkgs self;
+        };
       }
     ) // {
       nixosModules.default = import ./nix/module.nix;
