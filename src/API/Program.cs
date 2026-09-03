@@ -1,3 +1,5 @@
+using System.Security.Cryptography.X509Certificates;
+
 using API;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +14,17 @@ builder.Services.AddDbContext<VulnerabilityContext>(b =>
     b.UseSqlite("Data Source = ./db.sqlite");
 });
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
+builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 {
+    IConfigurationSection certConfig = context.Configuration.GetSection("Kestrel:Certificates:Default");
+    string certPath = certConfig["Path"]
+        ?? throw new InvalidOperationException(
+            "Kestrel:Certificates:Default:Path is required. See README.md for configuration.");
+    X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(certPath, certConfig["Password"]);
+
     serverOptions.ConfigureEndpointDefaults(options =>
     {
-        options.UseConnect();
+        options.UseConnect(certificate);
     });
 });
 
