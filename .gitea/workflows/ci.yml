@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flake-check:
+    # Requires a host-mode (non-Docker) runner with Nix and /dev/kvm available,
+    # since checks.*.connect-tunnel/sbom-researcher boot NixOS VMs under QEMU.
+    runs-on: nix-kvm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: nix flake check
+        run: nix flake check -L
